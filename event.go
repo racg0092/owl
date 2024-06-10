@@ -6,8 +6,17 @@ const (
 )
 
 type Event struct {
-	Type      int
-	Location  string
+
+	// Defines if is realted to a file of a directory
+	// I think this can be remved and just use operation
+	Type int
+
+	// Absolute location
+	Location string
+
+	// Type of operation performed on the file
 	Operation int
-	Cancel    func()
+
+	// Cancels the go routine for the current event
+	Cancel func()
 }
