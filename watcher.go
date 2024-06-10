@@ -25,7 +25,7 @@ type Watcher struct {
 	Files []models.File
 
 	// Event channels
-	Events chan int
+	Events chan Event
 
 	// Error channels
 	Errors chan error
@@ -34,6 +34,8 @@ type Watcher struct {
 	Directories []string
 
 	Done chan int
+
+	Verbose bool
 }
 
 func (w *Watcher) Close() {

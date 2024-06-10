@@ -2,11 +2,10 @@ package owl
 
 import (
 	"fmt"
+	"github.com/racg0092/owl/pkg/models"
 	"os"
 	"path/filepath"
 	"time"
-
-	"github.com/racg0092/owl/pkg/models"
 )
 
 // Gets File Information. Takes in a `loc` (absolute or relative) and returns
@@ -26,7 +25,7 @@ func GetFileInfo(loc string) (models.File, error) {
 	return models.File{Name: stats.Name(), ModTime: stats.ModTime(), AbsLoc: abs}, nil
 }
 
-func NewWatcher(path string) (*Watcher, error) {
+func NewWatcher(path string, opt Options) (*Watcher, error) {
 	stats, err := os.Stat(path)
 	if err != nil {
 		return &Watcher{}, err
@@ -37,35 +36,48 @@ func NewWatcher(path string) (*Watcher, error) {
 	}
 
 	w := &Watcher{
-		Mode:   PollingMode,
-		Events: make(chan int),
-		Errors: make(chan error),
-		Done:   make(chan int),
+		Mode:    opt.Mode,
+		Events:  make(chan Event),
+		Errors:  make(chan error),
+		Done:    make(chan int),
+		Verbose: opt.Verbose,
 	}
+
 	var isFile bool
 	if stats.IsDir() {
+
 		w.Root = abs
 		isFile = false
+		w.Files = make([]models.File, 0)
+		w.Directories = make([]string, 0)
+
 	} else {
+
 		w.File = models.File{
 			Name:    stats.Name(),
 			AbsLoc:  abs,
 			ModTime: stats.ModTime(),
 		}
+
+		w.File.SetContext()
 		isFile = true
+
 	}
 
 	if isFile {
-		go fileProcess(w)
+		go fileProcess(w, w.File)
 	} else {
-		go dirProcess(w)
+		go dirProcess(w, w.Root)
 	}
 
 	return w, nil
 }
 
-func fileProcess(w *Watcher) {
+func fileProcess(w *Watcher, file models.File) {
 	for {
+		if file.Context.Err() != nil {
+			break
+		}
 		// some editors will rename or delete the old file when making changes therefore waiting half a second is recomended
 		// todo: find a better sweet spot with the timeing
 		time.Sleep(time.Millisecond * 500)
@@ -78,13 +90,42 @@ func fileProcess(w *Watcher) {
 			continue
 		}
 		modTime := s.ModTime()
-		if !w.File.ModTime.Equal(modTime) {
-			w.File.ModTime = modTime
-			w.Events <- FileModified
+		if !file.ModTime.Equal(modTime) {
+
+			if w.Verbose {
+				fmt.Printf("[modified %v] %s\n", modTime.Format("15:04:05"), file.AbsLoc)
+			}
+
+			file.ModTime = modTime
+			w.Events <- Event{
+				Type:      FilEvent,
+				Location:  file.AbsLoc,
+				Operation: FileModified,
+				Cancel:    file.Cancel,
+			}
+
 		}
 	}
 }
 
-func dirProcess(w *Watcher) {
+func dirProcess(w *Watcher, dir string) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		w.Errors <- err
+		return
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			go dirProcess(w, filepath.Join(dir, entry.Name()))
 
+		} else {
+			f, err := GetFileInfo(filepath.Join(dir, entry.Name()))
+			if err != nil {
+				w.Errors <- err
+				continue
+			}
+			f.SetContext()
+			go fileProcess(w, f)
+		}
+	}
 }

@@ -8,7 +8,7 @@ import (
 )
 
 func TestFileWatch(t *testing.T) {
-	w, err := owl.NewWatcher("../sandbox/file1")
+	w, err := owl.NewWatcher("../sandbox/file1", owl.Options{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -18,8 +18,8 @@ func TestFileWatch(t *testing.T) {
 			if !open {
 				return
 			}
-			if e == owl.FileModified {
-				fmt.Println("File was modified")
+			if e.Operation == owl.FileModified {
+				fmt.Printf("File was modified. %s\n", e.Location)
 			} else {
 				fmt.Printf("%v Something else happend to the file\n", e)
 			}
