@@ -9,8 +9,6 @@ import (
 	"github.com/racg0092/owl/pkg/models"
 )
 
-var outputChannel = make(chan int)
-
 // Gets File Information. Takes in a `loc` (absolute or relative) and returns
 // the file information or an error
 func GetFileInfo(loc string) (models.File, error) {
