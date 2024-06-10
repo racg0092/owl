@@ -2,12 +2,14 @@ package tests
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/racg0092/owl"
 )
 
 func TestFileWatch(t *testing.T) {
+	fmt.Println(os.Getpid())
 	w, err := owl.NewWatcher("../sandbox", owl.Options{})
 	if err != nil {
 		t.Error(err)
