@@ -84,7 +84,7 @@ func fileProcess(w *Watcher, file models.File) {
 		if w.IsDone() {
 			break
 		}
-		s, err := os.Stat(w.File.AbsLoc)
+		s, err := os.Stat(file.AbsLoc)
 		if err != nil {
 			w.Errors <- err
 			continue
