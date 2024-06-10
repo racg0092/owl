@@ -116,8 +116,7 @@ func dirProcess(w *Watcher, dir string) {
 	}
 	for _, entry := range entries {
 		if entry.IsDir() {
-			go dirProcess(w, filepath.Join(dir, entry.Name()))
-
+			go dirRoutine(w, filepath.Join(dir, entry.Name()))
 		} else {
 			f, err := GetFileInfo(filepath.Join(dir, entry.Name()))
 			if err != nil {
@@ -126,6 +125,35 @@ func dirProcess(w *Watcher, dir string) {
 			}
 			f.SetContext()
 			go fileProcess(w, f)
+		}
+	}
+}
+
+func dirRoutine(w *Watcher, dir string) {
+	mem := make(map[string]time.Time)
+	for {
+		time.Sleep(time.Millisecond * 500)
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			w.Errors <- err
+		}
+
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+			_, empty := mem[filepath.Join(dir, entry.Name())]
+			if empty {
+				continue
+			}
+			f, err := GetFileInfo(filepath.Join(dir, entry.Name()))
+			if err != nil {
+				w.Errors <- err
+				continue
+			}
+			f.SetContext()
+			go fileProcess(w, f)
+			mem[filepath.Join(dir, entry.Name())] = f.ModTime
 		}
 	}
 }

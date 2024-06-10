@@ -8,7 +8,7 @@ import (
 )
 
 func TestFileWatch(t *testing.T) {
-	w, err := owl.NewWatcher("../sandbox/file1", owl.Options{})
+	w, err := owl.NewWatcher("../sandbox", owl.Options{})
 	if err != nil {
 		t.Error(err)
 	}
