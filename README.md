@@ -19,7 +19,7 @@ At this point usage is very simple. Do keep in mind this is not an stable releas
 // initialize the watcher
 w, err := owl.NewWatcher("../sandbox", owl.Options{})
 if err != nil {
-  t.Error(err)
+  log.Fatal(err)
 }
 for {
   // handle events, errors and done channels
@@ -37,9 +37,10 @@ for {
     if !open {
       return
     }
-    t.Error(err)
+    fmt.Println(err)
   case _ = <-w.Done:
     fmt.Println("Process is done")
+    return
   }
 }
 ```
