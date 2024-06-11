@@ -16,31 +16,31 @@ I'm also interested in learning from the process of putting it to together. That
 At this point usage is very simple. Do keep in mind this is not an stable release therefore the API may change in the future.
 
 ```go
-  // initialize the watcher
-	w, err := owl.NewWatcher("../sandbox", owl.Options{})
-	if err != nil {
-		t.Error(err)
-	}
-	for {
-    // handle events, errors and done channels
-		select {
-		case e, open := <-w.Events:
-			if !open {
-				return
-			}
-			if e.Operation == owl.FileModified {
-				fmt.Printf("File was modified. %s\n", e.Location)
-			} else {
-				fmt.Printf("%v Something else happend to the file\n", e)
-			}
-		case err, open := <-w.Errors:
-			if !open {
-				return
-			}
-			t.Error(err)
-		case _ = <-w.Done:
-			fmt.Println("Process is done")
-		}
-	}
+// initialize the watcher
+w, err := owl.NewWatcher("../sandbox", owl.Options{})
+if err != nil {
+  t.Error(err)
+}
+for {
+  // handle events, errors and done channels
+  select {
+  case e, open := <-w.Events:
+    if !open {
+      return
+    }
+    if e.Operation == owl.FileModified {
+      fmt.Printf("File was modified. %s\n", e.Location)
+    } else {
+      fmt.Printf("%v Something else happend to the file\n", e)
+    }
+  case err, open := <-w.Errors:
+    if !open {
+      return
+    }
+    t.Error(err)
+  case _ = <-w.Done:
+    fmt.Println("Process is done")
+  }
+}
 ```
 
